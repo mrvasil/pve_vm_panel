@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block content %}
+<header class="hero">
+    <div>
+        <div class="eyebrow">Proxmox VM Studio</div>
+        <h1>Instant Ubuntu VM</h1>
+        <p class="lead">Name it, pick a preset, and the VM appears with cloud-init and DHCP.</p>
+    </div>
+    <div class="hero-card">
+        <div class="hero-card__row">
+            <span class="hero-card__label">Template</span>
+            <span class="hero-card__value">VM {{ template_vmid }}</span>
+        </div>
+        <div class="hero-card__row">
+            <span class="hero-card__label">Storage</span>
+            <span class="hero-card__value">{{ storage }}</span>
+        </div>
+        <div class="hero-card__row">
+            <span class="hero-card__label">Network</span>
+            <span class="hero-card__value">DHCP</span>
+        </div>
+    </div>
+</header>
+
+<section class="grid">
+    <div class="panel form-panel">
+        <form id="create-form">
+            <div class="field">
+                <label for="vm-name">VM name</label>
+                <input id="vm-name" name="vm_name" type="text" placeholder="project-alpha" required>
+                <div class="hint">3-31 chars, letters/numbers/dash/underscore.</div>
+            </div>
+
+            <div class="field split">
+                <div>
+                    <label for="username">Login</label>
+                    <input id="username" name="username" type="text" value="{{ default_username }}">
+                </div>
+                <div>
+                    <label for="password">Password</label>
+                    <div class="inline">
+                        <input id="password" name="password" type="text" placeholder="Auto-generate">
+                        <button class="ghost" type="button" id="gen-pass">Generate</button>
+                    </div>
+                    <div class="hint">Leave empty to auto-generate.</div>
+                </div>
+            </div>
+
+            <div class="field">
+                <label>Preset</label>
+                <div class="preset-grid">
+                    {% for preset in presets %}
+                    <label class="preset-card">
+                        <input type="radio" name="preset" value="{{ preset.id }}" {% if loop.first %}checked{% endif %}>
+                        <div class="preset-body">
+                            <div class="preset-title">{{ preset.label }}</div>
+                            <div class="preset-note">{{ preset.note }}</div>
+                            <div class="preset-specs">
+                                <span>{{ preset.cores }} vCPU</span>
+                                <span>{{ (preset.memory_mb // 1024) }} GB RAM</span>
+                                <span>{{ preset.disk_gb }} GB disk</span>
+                            </div>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <button class="primary" type="submit" id="submit-btn">Create VM</button>
+        </form>
+    </div>
+
+    <div class="panel status-panel">
+        <div class="status-header">
+            <h2>Provisioning</h2>
+            <div class="status-pill" id="status-pill">Idle</div>
+        </div>
+        <div class="steps" id="steps"></div>
+
+        <div class="result-card">
+            <div class="result-row">
+                <span class="result-label">Name</span>
+                <span class="result-value" id="result-name">-</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">VMID</span>
+                <span class="result-value" id="result-vmid">-</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">IP</span>
+                <span class="result-value" id="result-ip">-</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">Login</span>
+                <span class="result-value" id="result-user">-</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">Password</span>
+                <span class="result-value mono" id="result-pass">-</span>
+            </div>
+        </div>
+
+        <div class="result-actions">
+            <button class="ghost" type="button" id="copy-password" disabled>Copy password</button>
+        </div>
+
+        <div class="error-box" id="error-box"></div>
+    </div>
+</section>
+{% endblock %}
