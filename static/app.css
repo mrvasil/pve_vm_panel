@@ -1,14 +1,14 @@
 :root {
-    color-scheme: light;
-    --bg: #f4f1ea;
-    --ink: #141716;
-    --muted: #515957;
-    --accent: #0b7a6d;
-    --accent-strong: #075e54;
-    --accent-warm: #f59e0b;
-    --card: rgba(255, 255, 255, 0.82);
-    --border: rgba(18, 22, 24, 0.12);
-    --shadow: 0 25px 60px rgba(15, 20, 20, 0.12);
+    color-scheme: dark;
+    --bg: #050505;
+    --ink: #ffffff;
+    --muted: rgba(255, 255, 255, 0.6);
+    --accent: #8a7cf7;
+    --accent-strong: #6f63d9;
+    --accent-warm: #b497ff;
+    --card: rgba(28, 28, 30, 0.78);
+    --border: rgba(255, 255, 255, 0.12);
+    --shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
     --radius: 20px;
 }
 
@@ -21,9 +21,10 @@ body {
     min-height: 100vh;
     font-family: "Space Grotesk", sans-serif;
     color: var(--ink);
-    background: radial-gradient(circle at 20% 20%, rgba(11, 122, 109, 0.18), transparent 45%),
-        radial-gradient(circle at 80% 10%, rgba(245, 158, 11, 0.2), transparent 40%),
-        linear-gradient(180deg, #f7f4ee 0%, #ece7dc 100%);
+    background: radial-gradient(circle at 15% 10%, rgba(138, 124, 247, 0.18), transparent 45%),
+        radial-gradient(circle at 85% 0%, rgba(164, 145, 255, 0.2), transparent 40%),
+        radial-gradient(circle at 70% 60%, rgba(102, 98, 140, 0.22), transparent 45%),
+        linear-gradient(180deg, #050505 0%, #0b0b0c 100%);
     position: relative;
     overflow-x: hidden;
 }
@@ -42,13 +43,13 @@ body::after {
 }
 
 body::before {
-    background: radial-gradient(circle, rgba(11, 122, 109, 0.35) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(138, 124, 247, 0.35) 0%, transparent 70%);
     top: -140px;
     right: -120px;
 }
 
 body::after {
-    background: radial-gradient(circle, rgba(245, 158, 11, 0.35) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(164, 145, 255, 0.3) 0%, transparent 70%);
     bottom: -140px;
     left: -120px;
     animation-delay: -6s;
@@ -97,7 +98,7 @@ body::after {
     letter-spacing: 0.28em;
     font-size: 11px;
     font-weight: 600;
-    color: var(--accent);
+    color: rgba(255, 255, 255, 0.7);
 }
 
 h1 {
@@ -128,7 +129,7 @@ h1 {
     justify-content: space-between;
     gap: 16px;
     padding: 8px 0;
-    border-bottom: 1px dashed rgba(18, 22, 24, 0.08);
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
 }
 
 .hero-card__row:last-child {
@@ -191,7 +192,8 @@ input[type="text"] {
     padding: 12px 14px;
     border-radius: 14px;
     border: 1px solid var(--border);
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(44, 44, 46, 0.85);
+    color: var(--ink);
     font-size: 14px;
     font-family: "Space Grotesk", sans-serif;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -199,8 +201,8 @@ input[type="text"] {
 
 input[type="text"]:focus {
     outline: none;
-    border-color: rgba(11, 122, 109, 0.7);
-    box-shadow: 0 0 0 3px rgba(11, 122, 109, 0.15);
+    border-color: rgba(52, 199, 89, 0.7);
+    box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.2);
 }
 
 .inline {
@@ -239,19 +241,19 @@ input[type="text"]:focus {
 .preset-body {
     border-radius: 16px;
     padding: 16px;
-    border: 1px solid rgba(18, 22, 24, 0.1);
-    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(44, 44, 46, 0.72);
     transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .preset-card:hover .preset-body {
     transform: translateY(-2px);
-    border-color: rgba(11, 122, 109, 0.3);
+    border-color: rgba(52, 199, 89, 0.35);
 }
 
 .preset-card input:checked + .preset-body {
     border-color: var(--accent);
-    box-shadow: 0 12px 24px rgba(11, 122, 109, 0.15);
+    box-shadow: 0 12px 24px rgba(52, 199, 89, 0.18);
 }
 
 .preset-title {
@@ -271,7 +273,7 @@ input[type="text"]:focus {
     flex-wrap: wrap;
     gap: 8px;
     font-size: 12px;
-    color: var(--accent-strong);
+    color: rgba(255, 255, 255, 0.75);
 }
 
 .primary {
@@ -289,7 +291,7 @@ input[type="text"]:focus {
 
 .primary:hover {
     transform: translateY(-1px);
-    box-shadow: 0 12px 24px rgba(11, 122, 109, 0.25);
+    box-shadow: 0 12px 24px rgba(52, 199, 89, 0.25);
 }
 
 .primary:disabled {
@@ -299,8 +301,9 @@ input[type="text"]:focus {
 }
 
 .ghost {
-    border: 1px solid rgba(18, 22, 24, 0.15);
-    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(44, 44, 46, 0.9);
+    color: var(--ink);
     padding: 10px 14px;
     border-radius: 12px;
     font-size: 13px;
@@ -310,8 +313,8 @@ input[type="text"]:focus {
 }
 
 .ghost:hover {
-    border-color: rgba(11, 122, 109, 0.5);
-    color: var(--accent-strong);
+    border-color: rgba(52, 199, 89, 0.5);
+    color: #ffffff;
 }
 
 .ghost:disabled {
@@ -336,23 +339,23 @@ input[type="text"]:focus {
     border-radius: 999px;
     font-size: 12px;
     font-weight: 600;
-    background: rgba(18, 22, 24, 0.08);
+    background: rgba(255, 255, 255, 0.08);
     color: var(--muted);
 }
 
 .status-pill.is-running {
-    background: rgba(11, 122, 109, 0.15);
-    color: var(--accent-strong);
+    background: rgba(52, 199, 89, 0.2);
+    color: var(--accent);
 }
 
 .status-pill.is-done {
-    background: rgba(11, 122, 109, 0.2);
-    color: var(--accent-strong);
+    background: rgba(52, 199, 89, 0.25);
+    color: var(--accent);
 }
 
 .status-pill.is-error {
-    background: rgba(220, 38, 38, 0.15);
-    color: #b91c1c;
+    background: rgba(255, 69, 58, 0.2);
+    color: #ff453a;
 }
 
 .steps {
@@ -369,8 +372,8 @@ input[type="text"]:focus {
     gap: 12px;
     padding: 12px 14px;
     border-radius: 14px;
-    border: 1px solid rgba(18, 22, 24, 0.08);
-    background: rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(44, 44, 46, 0.7);
 }
 
 .step-left {
@@ -383,7 +386,7 @@ input[type="text"]:focus {
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background: rgba(18, 22, 24, 0.2);
+    background: rgba(255, 255, 255, 0.2);
 }
 
 .step-title {
@@ -416,7 +419,7 @@ input[type="text"]:focus {
 }
 
 .step--error .step-dot {
-    background: #dc2626;
+    background: #ff453a;
 }
 
 .step--skipped .step-dot {
@@ -433,7 +436,7 @@ input[type="text"]:focus {
 }
 
 .step--error .step-state {
-    color: #b91c1c;
+    color: #ff453a;
 }
 
 .step--skipped .step-state {
@@ -441,10 +444,10 @@ input[type="text"]:focus {
 }
 
 .result-card {
-    border: 1px solid rgba(18, 22, 24, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 16px;
     padding: 16px;
-    background: rgba(255, 255, 255, 0.88);
+    background: rgba(44, 44, 46, 0.78);
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -480,9 +483,9 @@ input[type="text"]:focus {
     margin-top: 16px;
     padding: 12px 14px;
     border-radius: 12px;
-    background: rgba(220, 38, 38, 0.12);
-    border: 1px solid rgba(220, 38, 38, 0.3);
-    color: #991b1b;
+    background: rgba(255, 69, 58, 0.18);
+    border: 1px solid rgba(255, 69, 58, 0.4);
+    color: #ff453a;
     font-size: 13px;
     display: none;
 }

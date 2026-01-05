@@ -3,9 +3,9 @@
 {% block content %}
 <header class="hero">
     <div>
-        <div class="eyebrow">Proxmox VM Studio</div>
-        <h1>Instant Ubuntu VM</h1>
-        <p class="lead">Name it, pick a preset, and the VM appears with cloud-init and DHCP.</p>
+        <div class="eyebrow">Proxmox VE</div>
+        <h1>Dathomir admin panel</h1>
+        <!-- <p class="lead">Name it, pick a preset, and the VM appears with cloud-init and DHCP.</p> -->
     </div>
     <div class="hero-card">
         <div class="hero-card__row">
@@ -29,7 +29,6 @@
             <div class="field">
                 <label for="vm-name">VM name</label>
                 <input id="vm-name" name="vm_name" type="text" placeholder="project-alpha" required>
-                <div class="hint">3-31 chars, letters/numbers/dash/underscore.</div>
             </div>
 
             <div class="field split">
@@ -43,7 +42,6 @@
                         <input id="password" name="password" type="text" placeholder="Auto-generate">
                         <button class="ghost" type="button" id="gen-pass">Generate</button>
                     </div>
-                    <div class="hint">Leave empty to auto-generate.</div>
                 </div>
             </div>
 
