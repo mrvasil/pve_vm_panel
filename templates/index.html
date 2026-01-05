@@ -10,7 +10,15 @@
         <a class="ghost auth-logout" href="{{ url_for('logout') }}">Logout</a>
         {% endif %}
     </div>
-    <div class="hero-card">
+</header>
+
+<div class="tab-bar">
+    <button class="tab-btn" type="button" data-tab="manage">Manage VMs</button>
+    <button class="tab-btn active" type="button" data-tab="create">Create VM</button>
+</div>
+
+<section class="grid" id="tab-create">
+    <div class="hero-card create-meta is-subtle">
         <div class="hero-card__row">
             <span class="hero-card__label">Template</span>
             <span class="hero-card__value">VM {{ template_vmid }}</span>
@@ -24,9 +32,6 @@
             <span class="hero-card__value">DHCP</span>
         </div>
     </div>
-</header>
-
-<section class="grid">
     <div class="panel form-panel">
         <form id="create-form">
             <div class="field">
@@ -107,6 +112,88 @@
         </div>
 
         <div class="error-box" id="error-box"></div>
+    </div>
+</section>
+
+<section class="manage" id="tab-manage" hidden>
+
+    <div class="manage-grid">
+        <div class="panel vm-list-panel">
+            <div class="vm-list" id="vm-list"></div>
+        </div>
+
+        <div class="panel vm-details-panel">
+            <div class="vm-details-empty" id="vm-empty">Select a VM to manage it.</div>
+            <div class="vm-details" id="vm-details" hidden>
+                <div class="vm-details-header">
+                    <div>
+                        <div class="vm-details-eyebrow">Selected VM</div>
+                        <h2 id="vm-title">-</h2>
+                        <div class="vm-meta" id="vm-meta">-</div>
+                    </div>
+                    <div class="vm-actions">
+                        <button class="ghost btn-icon" type="button" id="vm-start">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10-6.5-10-6.5z"/></svg>
+                            Start
+                        </button>
+                        <button class="ghost btn-icon" type="button" id="vm-reboot">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6a6 6 0 1 1-5.2 3H4l3.5-4 3.5 4H8.8A4 4 0 1 0 12 8V6z"/></svg>
+                            Reboot
+                        </button>
+                        <button class="ghost btn-icon" type="button" id="vm-stop">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10H7z"/></svg>
+                            Stop
+                        </button>
+                    </div>
+                </div>
+
+                <form id="vm-update-form">
+                    <div class="field split">
+                        <div>
+                            <label for="vm-username">Username</label>
+                            <input id="vm-username" name="ciuser" type="text" placeholder="ubuntu">
+                        </div>
+                        <div>
+                            <label for="vm-password">Password</label>
+                            <div class="inline">
+                                <input id="vm-password" name="cipassword" type="text" placeholder="Leave empty to keep">
+                                <button class="ghost" type="button" id="vm-gen-pass">Generate</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field split">
+                        <div>
+                            <label for="vm-cores">CPU cores</label>
+                            <input id="vm-cores" name="cores" type="text" inputmode="numeric" placeholder="4">
+                        </div>
+                        <div>
+                            <label for="vm-ram">RAM (GB)</label>
+                            <input id="vm-ram" name="memory_gb" type="text" inputmode="decimal" placeholder="4">
+                        </div>
+                    </div>
+
+                    <div class="field split">
+                        <div>
+                            <label for="vm-disk-add">Add disk space (GB)</label>
+                            <input id="vm-disk-add" name="disk_add_gb" type="text" inputmode="decimal" placeholder="10">
+                            <div class="hint" id="vm-disk-current">Current: -</div>
+                        </div>
+                        <div>
+                            <label for="vm-net-bridge">Network bridge</label>
+                            <div class="inline">
+                                <select id="vm-net-iface" name="net_iface"></select>
+                                <select id="vm-net-bridge" name="net_bridge"></select>
+                            </div>
+                            <div class="hint" id="vm-net-current">Current: -</div>
+                        </div>
+                    </div>
+
+                    <button class="primary" type="submit" id="vm-save">Apply changes</button>
+                    <div class="error-box" id="vm-update-error"></div>
+                </form>
+            </div>
+        </div>
     </div>
 </section>
 {% endblock %}

@@ -270,6 +270,76 @@ def _wait_for_disk_size(proxmox, node, vmid, target_mb, timeout=120):
     return None
 
 
+def _extract_net_interfaces(config_data):
+    interfaces = {}
+    if not isinstance(config_data, dict):
+        return interfaces
+    for key, value in config_data.items():
+        if key.startswith("net") and isinstance(value, str):
+            interfaces[key] = value
+    return interfaces
+
+
+def _replace_bridge(net_value, new_bridge):
+    parts = [part.strip() for part in net_value.split(",") if part.strip()]
+    updated = []
+    replaced = False
+    for part in parts:
+        if part.startswith("bridge="):
+            updated.append(f"bridge={new_bridge}")
+            replaced = True
+        else:
+            updated.append(part)
+    if not replaced:
+        updated.append(f"bridge={new_bridge}")
+    return ",".join(updated)
+
+
+def _update_config(proxmox, node, vmid, **payload):
+    if not payload:
+        return
+    try:
+        proxmox.nodes(node).qemu(vmid).config.put(**payload)
+        return
+    except Exception as exc:
+        message = str(exc)
+        if "501" not in message and "Not Implemented" not in message and "404" not in message:
+            raise
+    proxmox.nodes(node).qemu(vmid).config.post(**payload)
+
+
+def _resize_disk_by_mb(proxmox, node, vmid, disk, delta_mb):
+    if delta_mb <= 0:
+        return None
+    size_delta = f"+{delta_mb}M"
+    result = None
+    try:
+        result = proxmox.nodes(node).qemu(vmid).resize.put(
+            disk=disk,
+            size=size_delta,
+        )
+    except Exception as exc:
+        message = str(exc)
+        if "501" not in message and "Not Implemented" not in message and "404" not in message:
+            raise
+    if result is None:
+        try:
+            result = proxmox.nodes(node).qemu(vmid).resize.post(
+                disk=disk,
+                size=size_delta,
+            )
+        except Exception as exc:
+            message = str(exc)
+            if "501" not in message and "Not Implemented" not in message and "404" not in message:
+                raise
+    if result is None:
+        result = _extjs_resize(node, vmid, disk, size_delta)
+    upid = _unwrap_data(result)
+    if isinstance(upid, str) and upid.startswith("UPID"):
+        _wait_for_task(proxmox, node, upid)
+    return size_delta
+
+
 def _wait_for_task(proxmox, node, upid, timeout=1800):
     start = time.time()
     while True:
@@ -504,6 +574,146 @@ def logout():
     session.pop("authenticated", None)
     return redirect(url_for("login"))
 
+
+@app.route("/api/vms")
+@require_auth
+def list_vms():
+    proxmox = _get_proxmox()
+    node = config.PVE_NODE
+    raw = _unwrap_data(proxmox.nodes(node).qemu.get()) or []
+    raw = sorted(raw, key=lambda item: item.get("vmid") or 0)
+    items = []
+    for vm in raw:
+        vmid = vm.get("vmid")
+        if vmid is None:
+            continue
+        name = vm.get("name") or f"vm-{vmid}"
+        status = vm.get("status") or "unknown"
+        ip = None
+        if status == "running":
+            ip = _read_vm_ip(proxmox, node, vmid)
+        maxmem = vm.get("maxmem")
+        maxmem_mb = int(maxmem / (1024 * 1024)) if maxmem else None
+        maxcpu = vm.get("maxcpu") or vm.get("cpus") or vm.get("cores")
+        if not maxcpu:
+            config_data = _unwrap_data(proxmox.nodes(node).qemu(vmid).config.get()) or {}
+            maxcpu = config_data.get("cores")
+        items.append(
+            {
+                "vmid": vmid,
+                "name": name,
+                "status": status,
+                "ip": ip,
+                "maxmem_mb": maxmem_mb,
+                "maxcpu": maxcpu,
+            }
+        )
+    return jsonify({"vms": items})
+
+
+@app.route("/api/vms/<int:vmid>")
+@require_auth
+def vm_details(vmid):
+    proxmox = _get_proxmox()
+    node = config.PVE_NODE
+    config_data = _unwrap_data(proxmox.nodes(node).qemu(vmid).config.get()) or {}
+    status_data = _unwrap_data(proxmox.nodes(node).qemu(vmid).status.current.get()) or {}
+    ip = _read_vm_ip(proxmox, node, vmid) if status_data.get("status") == "running" else None
+    disk_size = _read_disk_size_mb(proxmox, node, vmid)
+    nets = _extract_net_interfaces(config_data)
+    net_details = {}
+    for key, value in nets.items():
+        match = re.search(r"bridge=([^,]+)", value)
+        net_details[key] = {
+            "value": value,
+            "bridge": match.group(1) if match else None,
+        }
+    return jsonify(
+        {
+            "vmid": vmid,
+            "name": config_data.get("name") or status_data.get("name"),
+            "status": status_data.get("status"),
+            "ip": ip,
+            "cores": config_data.get("cores"),
+            "memory": config_data.get("memory"),
+            "disk_size_mb": disk_size,
+            "ciuser": config_data.get("ciuser"),
+            "networks": net_details,
+            "uptime": status_data.get("uptime"),
+        }
+    )
+
+
+@app.route("/api/vms/<int:vmid>/update", methods=["POST"])
+@require_auth
+def update_vm(vmid):
+    payload = request.get_json(silent=True) or {}
+    proxmox = _get_proxmox()
+    node = config.PVE_NODE
+
+    config_payload = {}
+    if "cores" in payload and payload["cores"]:
+        config_payload["cores"] = int(payload["cores"])
+    if "memory_mb" in payload and payload["memory_mb"]:
+        config_payload["memory"] = int(payload["memory_mb"])
+    if "ciuser" in payload and payload["ciuser"]:
+        config_payload["ciuser"] = payload["ciuser"].strip()
+    if "cipassword" in payload and payload["cipassword"]:
+        config_payload["cipassword"] = payload["cipassword"]
+
+    net_iface = payload.get("net_iface")
+    net_bridge = payload.get("net_bridge")
+    if net_iface and net_bridge:
+        current_config = _unwrap_data(proxmox.nodes(node).qemu(vmid).config.get()) or {}
+        net_value = current_config.get(net_iface)
+        if not net_value:
+            return jsonify({"error": "Network interface not found"}), 400
+        config_payload[net_iface] = _replace_bridge(net_value, net_bridge)
+
+    if config_payload:
+        _update_config(proxmox, node, vmid, **config_payload)
+
+    if ("ciuser" in config_payload) or ("cipassword" in config_payload):
+        _regenerate_cloudinit(proxmox, node, vmid)
+
+    disk_add_gb = payload.get("disk_add_gb")
+    resize_note = None
+    if disk_add_gb:
+        delta_mb = int(float(disk_add_gb) * 1024)
+        resize_note = _resize_disk_by_mb(proxmox, node, vmid, config.PVE_DISK_NAME, delta_mb)
+
+    return jsonify({"success": True, "resize": resize_note})
+
+
+@app.route("/api/vms/<int:vmid>/power", methods=["POST"])
+@require_auth
+def vm_power(vmid):
+    payload = request.get_json(silent=True) or {}
+    action = payload.get("action")
+    if action not in {"start", "stop", "reboot", "shutdown"}:
+        return jsonify({"error": "Unsupported action"}), 400
+    proxmox = _get_proxmox()
+    node = config.PVE_NODE
+    getattr(proxmox.nodes(node).qemu(vmid).status, action).post()
+    return jsonify({"success": True})
+
+
+@app.route("/api/networks")
+@require_auth
+def list_networks():
+    proxmox = _get_proxmox()
+    node = config.PVE_NODE
+    raw = _unwrap_data(proxmox.nodes(node).network.get()) or []
+    bridges = []
+    for entry in raw:
+        if entry.get("type") == "bridge":
+            bridges.append(
+                {
+                    "iface": entry.get("iface"),
+                    "active": entry.get("active"),
+                }
+            )
+    return jsonify({"bridges": bridges})
 
 @app.route("/api/create", methods=["POST"])
 @require_auth
