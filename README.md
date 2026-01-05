@@ -12,7 +12,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-2. Export configuration values (example):
+2. Export configuration values (example) or put them in `.env` (auto-loaded with python-dotenv):
 
 ```bash
 export PVE_HOST="https://127.0.0.1:8006"
@@ -21,6 +21,17 @@ export PVE_PASSWORD="your-password"
 export PVE_NODE="pve"
 export PVE_TEMPLATE_VMID="100"
 export PVE_STORAGE="local-lvm"
+```
+
+Example `.env`:
+
+```bash
+PVE_HOST="https://127.0.0.1:8006"
+PVE_USER="root@pam"
+PVE_PASSWORD="your-password"
+PVE_NODE="pve"
+PVE_TEMPLATE_VMID="100"
+PVE_STORAGE="local-lvm"
 ```
 
 3. Run the app:
