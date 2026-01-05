@@ -13,6 +13,8 @@
     <div class="page">
         {% block content %}{% endblock %}
     </div>
+    {% if include_app_js is not defined or include_app_js %}
     <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+    {% endif %}
 </body>
 </html>

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth">
+    <div class="panel auth-panel">
+        <div class="auth-header">
+            <div class="eyebrow">Access</div>
+            <h1>Sign in</h1>
+            <p class="lead">Enter the panel password to continue.</p>
+        </div>
+        <form method="post" class="auth-form">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autofocus required>
+            {% if error %}
+            <div class="error-box is-visible">{{ error }}</div>
+            {% endif %}
+            <button class="primary" type="submit">Unlock</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -55,6 +55,8 @@ Open `http://localhost:8080`.
 - `PVE_POLL_INTERVAL`: polling interval in seconds (default 5).
 - `APP_HOST` / `APP_PORT`: Flask bind address (default 0.0.0.0:8080).
 - `APP_DEBUG`: `true` to enable Flask debug mode.
+- `APP_PASSWORD`: if set, enables login with this password.
+- `APP_SECRET_KEY`: Flask session secret (set in production).
 
 ## Notes
 

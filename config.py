@@ -37,6 +37,8 @@ POLL_INTERVAL = _env_int("PVE_POLL_INTERVAL", 5)
 APP_HOST = os.getenv("APP_HOST", "0.0.0.0")
 APP_PORT = _env_int("APP_PORT", 8080)
 APP_DEBUG = _env_bool("APP_DEBUG", "false")
+APP_PASSWORD = os.getenv("APP_PASSWORD", "")
+APP_SECRET_KEY = os.getenv("APP_SECRET_KEY", "dev-secret")
 
 PRESETS = [
     {

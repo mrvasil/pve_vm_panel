@@ -5,16 +5,18 @@ import string
 import threading
 import time
 import uuid
+from functools import wraps
 from urllib.parse import urlparse
 
 import requests
 
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, redirect, render_template, request, session, url_for
 from proxmoxer import ProxmoxAPI
 
 import config
 
 app = Flask(__name__)
+app.secret_key = config.APP_SECRET_KEY
 
 JOBS = {}
 JOBS_LOCK = threading.Lock()
@@ -105,6 +107,27 @@ def _cleanup_jobs(max_age=6 * 3600):
         for job_id in list(JOBS.keys()):
             if JOBS[job_id].get("updated_at", 0) < cutoff:
                 JOBS.pop(job_id, None)
+
+
+def _auth_enabled():
+    return bool(config.APP_PASSWORD)
+
+
+def _is_authenticated():
+    return session.get("authenticated", False)
+
+
+def require_auth(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        if not _auth_enabled():
+            return fn(*args, **kwargs)
+        if _is_authenticated():
+            return fn(*args, **kwargs)
+        if request.path.startswith("/api/"):
+            return jsonify({"error": "Not authorized"}), 401
+        return redirect(url_for("login"))
+    return wrapper
 
 
 def _get_proxmox():
@@ -449,6 +472,7 @@ def _provision_vm(job_id, vm_name, username, password, preset):
 
 
 @app.route("/")
+@require_auth
 def index():
     return render_template(
         "index.html",
@@ -456,10 +480,33 @@ def index():
         default_username=config.DEFAULT_USERNAME,
         template_vmid=config.TEMPLATE_VMID,
         storage=config.PVE_STORAGE,
+        include_app_js=True,
+        auth_enabled=_auth_enabled(),
     )
 
 
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if not _auth_enabled():
+        return redirect(url_for("index"))
+    error = ""
+    if request.method == "POST":
+        password = (request.form.get("password") or "").strip()
+        if password and password == config.APP_PASSWORD:
+            session["authenticated"] = True
+            return redirect(url_for("index"))
+        error = "Invalid password"
+    return render_template("login.html", error=error, include_app_js=False)
+
+
+@app.route("/logout")
+def logout():
+    session.pop("authenticated", None)
+    return redirect(url_for("login"))
+
+
 @app.route("/api/create", methods=["POST"])
+@require_auth
 def create_vm():
     payload = request.get_json(silent=True) or {}
     name = (payload.get("vm_name") or "").strip()
@@ -496,6 +543,7 @@ def create_vm():
 
 
 @app.route("/api/status/<job_id>")
+@require_auth
 def job_status(job_id):
     job = _job_snapshot(job_id)
     if not job:

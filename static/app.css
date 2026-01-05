@@ -187,22 +187,31 @@ h1 {
     gap: 16px;
 }
 
-input[type="text"] {
+input[type="text"],
+input[type="password"] {
     width: 100%;
     padding: 12px 14px;
     border-radius: 14px;
     border: 1px solid var(--border);
-    background: rgba(44, 44, 46, 0.85);
+    background: linear-gradient(135deg, rgba(58, 58, 60, 0.9), rgba(36, 36, 38, 0.9));
     color: var(--ink);
     font-size: 14px;
     font-family: "Space Grotesk", sans-serif;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-input[type="text"]:focus {
+input[type="text"]:focus,
+input[type="password"]:focus {
     outline: none;
-    border-color: rgba(52, 199, 89, 0.7);
-    box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.2);
+    border-color: rgba(138, 124, 247, 0.75);
+    box-shadow: 0 0 0 3px rgba(138, 124, 247, 0.25);
+}
+
+input[type="text"]:-webkit-autofill,
+input[type="password"]:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px rgba(36, 36, 38, 0.95) inset;
+    -webkit-text-fill-color: var(--ink);
+    transition: background-color 9999s ease-out, color 9999s ease-out;
 }
 
 .inline {
@@ -248,12 +257,12 @@ input[type="text"]:focus {
 
 .preset-card:hover .preset-body {
     transform: translateY(-2px);
-    border-color: rgba(52, 199, 89, 0.35);
+    border-color: rgba(138, 124, 247, 0.35);
 }
 
 .preset-card input:checked + .preset-body {
     border-color: var(--accent);
-    box-shadow: 0 12px 24px rgba(52, 199, 89, 0.18);
+    box-shadow: 0 12px 24px rgba(138, 124, 247, 0.2);
 }
 
 .preset-title {
@@ -291,7 +300,7 @@ input[type="text"]:focus {
 
 .primary:hover {
     transform: translateY(-1px);
-    box-shadow: 0 12px 24px rgba(52, 199, 89, 0.25);
+    box-shadow: 0 12px 24px rgba(138, 124, 247, 0.28);
 }
 
 .primary:disabled {
@@ -313,7 +322,7 @@ input[type="text"]:focus {
 }
 
 .ghost:hover {
-    border-color: rgba(52, 199, 89, 0.5);
+    border-color: rgba(138, 124, 247, 0.5);
     color: #ffffff;
 }
 
@@ -344,12 +353,12 @@ input[type="text"]:focus {
 }
 
 .status-pill.is-running {
-    background: rgba(52, 199, 89, 0.2);
+    background: rgba(138, 124, 247, 0.2);
     color: var(--accent);
 }
 
 .status-pill.is-done {
-    background: rgba(52, 199, 89, 0.25);
+    background: rgba(138, 124, 247, 0.28);
     color: var(--accent);
 }
 
@@ -492,6 +501,41 @@ input[type="text"]:focus {
 
 .error-box.is-visible {
     display: block;
+}
+
+.auth {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-panel {
+    max-width: 420px;
+    width: 100%;
+    text-align: left;
+}
+
+.auth-header h1 {
+    margin-bottom: 8px;
+}
+
+.auth-form {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.auth-form label {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.auth-logout {
+    display: inline-flex;
+    margin-top: 14px;
+    text-decoration: none;
 }
 
 @media (max-width: 960px) {
