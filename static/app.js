@@ -366,7 +366,12 @@ function updateMeta(details) {
     vmTitle.textContent = details.name ? `${details.name}` : `VM ${details.vmid}`;
     const ipText = details.ip || "IP unavailable";
     const status = details.status || "unknown";
-    vmMeta.textContent = `Status: ${status.toUpperCase()} · ${ipText}`;
+    vmMeta.innerHTML = "";
+    const statusSpan = document.createElement("span");
+    statusSpan.className = `vm-status vm-status--${status}`;
+    statusSpan.textContent = status.toUpperCase();
+    vmMeta.appendChild(statusSpan);
+    vmMeta.appendChild(document.createTextNode(` · ${ipText}`));
 }
 
 function selectVm(vmid) {

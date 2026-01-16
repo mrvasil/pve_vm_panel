@@ -62,7 +62,7 @@
                         <input type="radio" name="preset" value="{{ preset.id }}" {% if loop.first %}checked{% endif %}>
                         <div class="preset-body">
                             <div class="preset-title">{{ preset.label }}</div>
-                            <div class="preset-note">{{ preset.note }}</div>
+                            
                             <div class="preset-specs">
                                 <span>{{ preset.cores }} vCPU</span>
                                 <span>{{ (preset.memory_mb // 1024) }} GB RAM</span>
@@ -128,7 +128,6 @@
             <div class="vm-details" id="vm-details" hidden>
                 <div class="vm-details-header">
                     <div>
-                        <div class="vm-details-eyebrow">Selected VM</div>
                         <h2 id="vm-title">-</h2>
                         <div class="vm-meta" id="vm-meta">-</div>
                     </div>
@@ -157,7 +156,7 @@
                         <div>
                             <label for="vm-password">Password</label>
                             <div class="inline">
-                                <input id="vm-password" name="cipassword" type="text" placeholder="Leave empty to keep">
+                                <input id="vm-password" name="cipassword" type="text" placeholder="...">
                                 <button class="ghost" type="button" id="vm-gen-pass">Generate</button>
                             </div>
                         </div>
@@ -186,7 +185,7 @@
                                 <select id="vm-net-iface" name="net_iface"></select>
                                 <select id="vm-net-bridge" name="net_bridge"></select>
                             </div>
-                            <div class="hint" id="vm-net-current">Current: -</div>
+                            <div class="hint" id="vm-net-current" style="display: none;">Current: -</div>
                         </div>
                     </div>
 
