@@ -295,6 +295,21 @@ def _replace_bridge(net_value, new_bridge):
     return ",".join(updated)
 
 
+def _build_default_bridge_payload(config_data):
+    default_bridge = (config.PVE_DEFAULT_BRIDGE or "").strip()
+    if not default_bridge:
+        return {}
+    nets = _extract_net_interfaces(config_data)
+    if not nets:
+        return {}
+    iface = "net0" if "net0" in nets else sorted(nets.keys())[0]
+    net_value = nets[iface]
+    updated_value = _replace_bridge(net_value, default_bridge)
+    if updated_value == net_value:
+        return {}
+    return {iface: updated_value}
+
+
 def _update_config(proxmox, node, vmid, **payload):
     if not payload:
         return
@@ -500,6 +515,8 @@ def _provision_vm(job_id, vm_name, username, password, preset):
         }
         if config.PVE_SSH_KEYS:
             payload["sshkeys"] = config.PVE_SSH_KEYS
+        config_data = _unwrap_data(proxmox.nodes(node).qemu(vmid).config.get()) or {}
+        payload.update(_build_default_bridge_payload(config_data))
         proxmox.nodes(node).qemu(vmid).config.post(**payload)
         status, message = _regenerate_cloudinit(proxmox, node, vmid)
         _update_step(job_id, current_step, status, message)

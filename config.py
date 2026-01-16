@@ -29,6 +29,7 @@ PVE_STORAGE = os.getenv("PVE_STORAGE", "local-lvm")
 BASE_DISK_MB = _env_int("PVE_BASE_DISK_MB", 8704)
 PVE_DISK_NAME = os.getenv("PVE_DISK_NAME", "scsi0")
 PVE_ALLOW_RESIZE = _env_bool("PVE_ALLOW_RESIZE", "true")
+PVE_DEFAULT_BRIDGE = os.getenv("PVE_DEFAULT_BRIDGE", "vmbr1")
 
 DEFAULT_USERNAME = os.getenv("PVE_DEFAULT_USERNAME", "ubuntu")
 PVE_SSH_KEYS = os.getenv("PVE_SSH_KEYS", "")

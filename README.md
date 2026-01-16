@@ -21,6 +21,7 @@ export PVE_PASSWORD="your-password"
 export PVE_NODE="pve"
 export PVE_TEMPLATE_VMID="100"
 export PVE_STORAGE="local-lvm"
+export PVE_DEFAULT_BRIDGE="vmbr1"
 ```
 
 Example `.env`:
@@ -32,6 +33,7 @@ PVE_PASSWORD="your-password"
 PVE_NODE="pve"
 PVE_TEMPLATE_VMID="100"
 PVE_STORAGE="local-lvm"
+PVE_DEFAULT_BRIDGE="vmbr1"
 ```
 
 3. Run the app:
@@ -55,6 +57,7 @@ Open `http://localhost:8080`.
 - `PVE_BASE_DISK_MB`: base disk size of the template (default 8704).
 - `PVE_DISK_NAME`: disk ID to resize (default `scsi0`).
 - `PVE_ALLOW_RESIZE`: `true` to call the disk resize endpoint.
+- `PVE_DEFAULT_BRIDGE`: bridge name for the default VM NIC during creation (default `vmbr1`).
 - PVE 9.0 uses `PUT /nodes/{node}/qemu/{vmid}/resize` (the app tries PUT first, then POST, then extjs fallback).
 - `PVE_DEFAULT_USERNAME`: default cloud-init user (default `ubuntu`).
 - `PVE_SSH_KEYS`: optional SSH public keys for cloud-init.
