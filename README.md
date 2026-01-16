@@ -22,6 +22,9 @@ export PVE_NODE="pve"
 export PVE_TEMPLATE_VMID="100"
 export PVE_STORAGE="local-lvm"
 export PVE_DEFAULT_BRIDGE="vmbr1"
+export NFT_PORT_PANEL_URL="https://nft-port-panel.local"
+export NFT_PORT_PANEL_TOKEN="your-token"
+export NFT_PORT_PANEL_HEADER="authorization"
 ```
 
 Example `.env`:
@@ -34,6 +37,9 @@ PVE_NODE="pve"
 PVE_TEMPLATE_VMID="100"
 PVE_STORAGE="local-lvm"
 PVE_DEFAULT_BRIDGE="vmbr1"
+NFT_PORT_PANEL_URL="https://nft-port-panel.local"
+NFT_PORT_PANEL_TOKEN="your-token"
+NFT_PORT_PANEL_HEADER="authorization"
 ```
 
 3. Run the app:
@@ -71,6 +77,9 @@ Open `http://localhost:8080`.
 - `APP_DEBUG`: `true` to enable Flask debug mode.
 - `APP_PASSWORD`: if set, enables login with this password.
 - `APP_SECRET_KEY`: Flask session secret (set in production).
+- `NFT_PORT_PANEL_URL`: base URL for nft_port_panel (e.g. `https://panel.local`).
+- `NFT_PORT_PANEL_TOKEN`: API token for nft_port_panel.
+- `NFT_PORT_PANEL_HEADER`: `authorization` (default) or `x-api-token` for auth header.
 
 ## Notes
 

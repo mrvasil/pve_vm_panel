@@ -117,6 +117,44 @@ def _is_authenticated():
     return session.get("authenticated", False)
 
 
+def _nft_headers():
+    token = config.NFT_PORT_PANEL_TOKEN
+    header_mode = config.NFT_PORT_PANEL_HEADER
+    headers = {}
+    if not token:
+        return headers
+    if header_mode != "x-api-token":
+        headers["Authorization"] = f"Bearer {token}"
+    if header_mode != "authorization":
+        headers["X-API-Token"] = token
+    return headers
+
+
+def _nft_request(method, path, payload=None):
+    base_url = config.NFT_PORT_PANEL_URL.rstrip("/")
+    if not base_url:
+        return None, {"error": "NFT port panel URL is not configured"}, 400
+    if not config.NFT_PORT_PANEL_TOKEN:
+        return None, {"error": "NFT port panel token is not configured"}, 400
+    url = f"{base_url}{path}"
+    headers = _nft_headers()
+    try:
+        response = requests.request(
+            method,
+            url,
+            json=payload,
+            headers=headers,
+            timeout=10,
+        )
+    except requests.RequestException as exc:
+        return None, {"error": f"NFT port panel request failed: {exc}"}, 502
+    try:
+        data = response.json()
+    except ValueError:
+        data = {"error": response.text or "Invalid response"}
+    return response, data, response.status_code
+
+
 def require_auth(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
@@ -731,6 +769,26 @@ def list_networks():
                 }
             )
     return jsonify({"bridges": bridges})
+
+
+@app.route("/api/ports", methods=["GET", "POST", "DELETE"])
+@require_auth
+def vm_ports():
+    payload = request.get_json(silent=True) or None
+    response, data, status_code = _nft_request(request.method, "/api/vm-ports", payload)
+    if response is None:
+        return jsonify(data), status_code
+    return jsonify(data), status_code
+
+
+@app.route("/api/ports/restart", methods=["POST"])
+@require_auth
+def ports_restart():
+    response, data, status_code = _nft_request("POST", "/api/restart")
+    if response is None:
+        return jsonify(data), status_code
+    return jsonify(data), status_code
+
 
 @app.route("/api/create", methods=["POST"])
 @require_auth

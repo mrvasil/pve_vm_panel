@@ -15,6 +15,7 @@
 <div class="tab-bar">
     <button class="tab-btn" type="button" data-tab="manage">Manage VMs</button>
     <button class="tab-btn active" type="button" data-tab="create">Create VM</button>
+    <button class="tab-btn" type="button" data-tab="ports">Ports</button>
 </div>
 
 <section class="grid" id="tab-create">
@@ -193,6 +194,40 @@
                     <div class="error-box" id="vm-update-error"></div>
                 </form>
             </div>
+        </div>
+    </div>
+</section>
+
+<section class="manage" id="tab-ports" hidden>
+    <div class="manage-grid ports-grid">
+        <div class="panel">
+            <div class="status-header">
+                <h2>Allocate ports</h2>
+                <div class="inline">
+                    <button class="ghost" type="button" id="ports-refresh">Refresh</button>
+                    <button class="ghost" type="button" id="ports-restart">Restart nftables</button>
+                </div>
+            </div>
+            <form id="ports-form">
+                <div class="field">
+                    <label for="ports-name">VM name</label>
+                    <input id="ports-name" name="vm_name" type="text" placeholder="ctf-vm" required>
+                </div>
+                <div class="field">
+                    <label for="ports-ip">VM IP</label>
+                    <input id="ports-ip" name="vm_ip" type="text" placeholder="192.168.100.56" required>
+                </div>
+                <button class="primary" type="submit">Allocate 100 ports</button>
+                <div class="error-box" id="ports-error"></div>
+            </form>
+        </div>
+
+        <div class="panel">
+            <div class="status-header">
+                <h2>Allocations</h2>
+                <div class="status-pill" id="ports-count">0</div>
+            </div>
+            <div class="ports-table" id="ports-list"></div>
         </div>
     </div>
 </section>

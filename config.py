@@ -41,10 +41,14 @@ IP_WAIT_SECONDS = _env_int("PVE_IP_WAIT_SECONDS", 180)
 POLL_INTERVAL = _env_int("PVE_POLL_INTERVAL", 5)
 
 APP_HOST = os.getenv("APP_HOST", "0.0.0.0")
-APP_PORT = _env_int("APP_PORT", 8080)
+APP_PORT = _env_int("APP_PORT", 3333)
 APP_DEBUG = _env_bool("APP_DEBUG", "false")
 APP_PASSWORD = os.getenv("APP_PASSWORD", "")
 APP_SECRET_KEY = os.getenv("APP_SECRET_KEY", "dev-secret")
+
+NFT_PORT_PANEL_URL = os.getenv("NFT_PORT_PANEL_URL", "http://localhost:8080").strip()
+NFT_PORT_PANEL_TOKEN = os.getenv("NFT_PORT_PANEL_TOKEN", "").strip()
+NFT_PORT_PANEL_HEADER = os.getenv("NFT_PORT_PANEL_HEADER", "Authorization").strip().lower()
 
 PRESETS = [
     {

@@ -603,6 +603,41 @@ select:focus {
     gap: 20px;
 }
 
+.ports-grid {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+}
+
+.ports-table {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ports-row {
+    display: grid;
+    grid-template-columns: 1.2fr 1.2fr 0.7fr 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #0f141b;
+    font-size: 12px;
+    color: var(--ink);
+}
+
+.ports-row > div {
+    justify-self: end;
+}
+
+.ports-head {
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 10px;
+    color: var(--muted);
+    border-style: dashed;
+}
+
 .vm-list-panel {
     padding: 18px;
 }
@@ -752,6 +787,10 @@ select:focus {
     .manage-grid {
         grid-template-columns: 1fr;
     }
+
+    .ports-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 960px) {
@@ -788,6 +827,14 @@ select:focus {
     .inline {
         flex-direction: column;
         align-items: stretch;
+    }
+
+    .ports-row {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .ports-row span:nth-child(4) {
+        grid-column: span 2;
     }
 }
 

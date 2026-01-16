@@ -211,6 +211,7 @@ renderSteps(DEFAULT_STEPS);
 const tabButtons = document.querySelectorAll(".tab-btn");
 const tabCreate = document.getElementById("tab-create");
 const tabManage = document.getElementById("tab-manage");
+const tabPorts = document.getElementById("tab-ports");
 const refreshVmsBtn = document.getElementById("refresh-vms");
 const vmListEl = document.getElementById("vm-list");
 const vmDetailsEl = document.getElementById("vm-details");
@@ -232,21 +233,35 @@ const vmGenPass = document.getElementById("vm-gen-pass");
 const vmStartBtn = document.getElementById("vm-start");
 const vmRebootBtn = document.getElementById("vm-reboot");
 const vmStopBtn = document.getElementById("vm-stop");
+const portsForm = document.getElementById("ports-form");
+const portsName = document.getElementById("ports-name");
+const portsIp = document.getElementById("ports-ip");
+const portsList = document.getElementById("ports-list");
+const portsError = document.getElementById("ports-error");
+const portsRefresh = document.getElementById("ports-refresh");
+const portsCount = document.getElementById("ports-count");
+const portsRestart = document.getElementById("ports-restart");
 
 let selectedVmid = null;
 let networkOptions = [];
 let netMap = {};
 
 function setTab(tabName) {
-    if (!tabCreate || !tabManage) return;
+    if (!tabCreate || !tabManage || !tabPorts) return;
     const isManage = tabName === "manage";
-    tabCreate.hidden = isManage;
+    const isCreate = tabName === "create";
+    const isPorts = tabName === "ports";
+    tabCreate.hidden = !isCreate;
     tabManage.hidden = !isManage;
+    tabPorts.hidden = !isPorts;
     tabButtons.forEach((btn) => {
         btn.classList.toggle("active", btn.dataset.tab === tabName);
     });
     if (isManage && vmListEl && vmListEl.children.length === 0) {
         loadVmList();
+    }
+    if (isPorts && portsList && portsList.children.length === 0) {
+        loadPorts();
     }
 }
 
@@ -254,7 +269,7 @@ tabButtons.forEach((btn) => {
     btn.addEventListener("click", () => setTab(btn.dataset.tab));
 });
 
-if (tabCreate && tabManage) {
+if (tabCreate && tabManage && tabPorts) {
     setTab("manage");
 }
 
@@ -479,3 +494,145 @@ function powerAction(action) {
 if (vmStartBtn) vmStartBtn.addEventListener("click", () => powerAction("start"));
 if (vmRebootBtn) vmRebootBtn.addEventListener("click", () => powerAction("reboot"));
 if (vmStopBtn) vmStopBtn.addEventListener("click", () => powerAction("stop"));
+
+function setPortsMessage(message, isError) {
+    if (!portsError) return;
+    portsError.textContent = message || "";
+    portsError.classList.toggle("is-visible", !!message);
+    portsError.classList.toggle("is-success", !isError && !!message);
+}
+
+function renderPorts(allocations) {
+    if (!portsList) return;
+    portsList.innerHTML = "";
+    if (portsCount) portsCount.textContent = allocations.length;
+    if (!allocations.length) {
+        portsList.innerHTML = "<div class=\"vm-empty\">No allocations yet.</div>";
+        return;
+    }
+    const header = document.createElement("div");
+    header.className = "ports-row ports-head";
+    header.innerHTML = "<span>Name</span><span>IP</span><span>SSH</span><span>Range</span><span></span>";
+    portsList.appendChild(header);
+    allocations.forEach((alloc) => {
+        const row = document.createElement("div");
+        row.className = "ports-row";
+        const range = alloc.range_start && alloc.range_end ? `${alloc.range_start}-${alloc.range_end}` : "-";
+        row.innerHTML = `
+            <span>${alloc.name || "-"}</span>
+            <span>${alloc.ip || "-"}</span>
+            <span>${alloc.ssh_port || "-"}</span>
+            <span>${range}</span>
+        `;
+        const action = document.createElement("div");
+        const deleteBtn = document.createElement("button");
+        deleteBtn.type = "button";
+        deleteBtn.className = "ghost";
+        deleteBtn.textContent = "Delete";
+        deleteBtn.addEventListener("click", () => deletePort(alloc.name, alloc.ip));
+        action.appendChild(deleteBtn);
+        row.appendChild(action);
+        portsList.appendChild(row);
+    });
+}
+
+function loadPorts() {
+    if (!portsList) return;
+    portsList.innerHTML = "<div class=\"vm-empty\">Loading...</div>";
+    setPortsMessage("", false);
+    fetch("/api/ports")
+        .then((response) => response.json().then((data) => ({ ok: response.ok, data })))
+        .then(({ ok, data }) => {
+            if (!ok || data.error || data.ok === false) {
+                throw new Error(data.error || "Failed to load allocations");
+            }
+            renderPorts(data.allocations || []);
+        })
+        .catch((err) => {
+            setPortsMessage(err.message, true);
+            portsList.innerHTML = "<div class=\"vm-empty\">Failed to load allocations.</div>";
+        });
+}
+
+function createPortAllocation(payload) {
+    setPortsMessage("", false);
+    return fetch("/api/ports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    })
+        .then((response) => response.json().then((data) => ({ ok: response.ok, data })))
+        .then(({ ok, data }) => {
+            if (!ok || data.error || data.ok === false) {
+                throw new Error(data.error || "Allocation failed");
+            }
+            setPortsMessage("Allocation created.", false);
+            loadPorts();
+        })
+        .catch((err) => {
+            setPortsMessage(err.message, true);
+        });
+}
+
+function deletePort(name, ip) {
+    if (!name || !ip) {
+        setPortsMessage("Missing VM name or IP for delete.", true);
+        return;
+    }
+    setPortsMessage("", false);
+    fetch("/api/ports", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vm_name: name, vm_ip: ip }),
+    })
+        .then((response) => response.json().then((data) => ({ ok: response.ok, data })))
+        .then(({ ok, data }) => {
+            if (!ok || data.error || data.ok === false) {
+                throw new Error(data.error || "Delete failed");
+            }
+            setPortsMessage("Allocation removed.", false);
+            loadPorts();
+        })
+        .catch((err) => {
+            setPortsMessage(err.message, true);
+        });
+}
+
+if (portsRefresh) {
+    portsRefresh.addEventListener("click", () => loadPorts());
+}
+
+if (portsRestart) {
+    portsRestart.addEventListener("click", () => {
+        setPortsMessage("", false);
+        fetch("/api/ports/restart", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({}),
+        })
+            .then((response) => response.json().then((data) => ({ ok: response.ok, data })))
+            .then(({ ok, data }) => {
+                if (!ok || data.error || data.ok === false) {
+                    throw new Error(data.error || "Restart failed");
+                }
+                const note = data.stdout ? `Restarted. ${data.stdout}` : "Restarted.";
+                setPortsMessage(note.trim(), false);
+            })
+            .catch((err) => {
+                setPortsMessage(err.message, true);
+            });
+    });
+}
+
+if (portsForm) {
+    portsForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const name = (portsName?.value || "").trim();
+        const ip = (portsIp?.value || "").trim();
+        if (!name || !ip) {
+            setPortsMessage("VM name and IP are required.", true);
+            return;
+        }
+        createPortAllocation({ vm_name: name, vm_ip: ip });
+    });
+}
