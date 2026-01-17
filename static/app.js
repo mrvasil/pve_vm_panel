@@ -292,6 +292,8 @@ const vmTitle = document.getElementById("vm-title");
 const vmMeta = document.getElementById("vm-meta");
 const vmDiskCurrent = document.getElementById("vm-disk-current");
 const vmNetCurrent = document.getElementById("vm-net-current");
+const vmPortsCurrent = document.getElementById("vm-ports-current");
+const vmPortsBlock = document.getElementById("vm-ports-block");
 const vmUpdateForm = document.getElementById("vm-update-form");
 const vmUpdateError = document.getElementById("vm-update-error");
 const vmUsername = document.getElementById("vm-username");
@@ -478,6 +480,26 @@ function loadVmDetails(vmid) {
             loadNetworks().finally(() => {
                 renderNetworkSelects(defaultIface, currentBridge);
             });
+            if (vmPortsCurrent && vmPortsBlock) {
+                vmPortsBlock.hidden = true;
+                if (details.ip && details.name) {
+                    vmPortsCurrent.textContent = "Loading...";
+                    fetchPortsAllocations()
+                        .then((allocations) => {
+                            const match = allocations.find(
+                                (alloc) => alloc.name === details.name && alloc.ip === details.ip
+                            );
+                            if (!match) return;
+                            const range =
+                                match.range_start && match.range_end
+                                    ? `${match.range_start}-${match.range_end}`
+                                    : "-";
+                            vmPortsCurrent.textContent = `SSH ${match.ssh_port || "-"}, range ${range}`;
+                            vmPortsBlock.hidden = false;
+                        })
+                        .catch(() => {});
+                }
+            }
             renderVmListFromSelection();
         })
         .catch((err) => {
@@ -617,17 +639,22 @@ function loadPorts() {
     if (!portsList) return;
     portsList.innerHTML = "<div class=\"vm-empty\">Loading...</div>";
     setPortsMessage("", false);
-    fetch("/api/ports")
+    fetchPortsAllocations()
+        .then((allocations) => renderPorts(allocations))
+        .catch((err) => {
+            setPortsMessage(err.message, true);
+            portsList.innerHTML = "<div class=\"vm-empty\">Failed to load allocations.</div>";
+        });
+}
+
+function fetchPortsAllocations() {
+    return fetch("/api/ports")
         .then((response) => response.json().then((data) => ({ ok: response.ok, data })))
         .then(({ ok, data }) => {
             if (!ok || data.error || data.ok === false) {
                 throw new Error(data.error || "Failed to load allocations");
             }
-            renderPorts(data.allocations || []);
-        })
-        .catch((err) => {
-            setPortsMessage(err.message, true);
-            portsList.innerHTML = "<div class=\"vm-empty\">Failed to load allocations.</div>";
+            return data.allocations || [];
         });
 }
 
