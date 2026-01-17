@@ -675,13 +675,14 @@ function renderPorts(allocations) {
 
 function loadPorts() {
     if (!portsList) return;
-    portsList.innerHTML = "<div class=\"vm-empty\">Loading...</div>";
     setPortsMessage("", false);
     fetchPortsAllocations()
         .then((allocations) => renderPorts(allocations))
         .catch((err) => {
             setPortsMessage(err.message, true);
-            portsList.innerHTML = "<div class=\"vm-empty\">Failed to load allocations.</div>";
+            if (!portsList.children.length) {
+                portsList.innerHTML = "<div class=\"vm-empty\">Failed to load allocations.</div>";
+            }
         });
 }
 
