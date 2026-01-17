@@ -339,6 +339,17 @@ select:focus {
     cursor: not-allowed;
 }
 
+.ghost-accent {
+    border-color: rgba(126, 231, 135, 0.5);
+    color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(126, 231, 135, 0.2);
+}
+
+.ghost-accent:hover {
+    border-color: rgba(126, 231, 135, 0.8);
+    color: #ffffff;
+}
+
 .status-header {
     display: flex;
     align-items: center;

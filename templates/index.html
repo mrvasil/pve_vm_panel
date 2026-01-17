@@ -229,8 +229,16 @@
             <div class="status-header">
                 <h2>Allocate ports</h2>
                 <div class="inline">
-                    <button class="ghost" type="button" id="ports-refresh">Refresh</button>
-                    <button class="ghost" type="button" id="ports-restart">Restart nftables</button>
+                    {% if ports_panel_url %}
+                    <a class="ghost btn-icon" href="{{ ports_panel_url }}" target="_blank" rel="noopener noreferrer">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l4 4h-3v6h-2V7H8l4-4zm-6 8v8h12v-8h2v10H4V11h2z"/></svg>
+                        Panel
+                    </a>
+                    {% endif %}
+                    <button class="ghost ghost-accent btn-icon" type="button" id="ports-restart">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6a6 6 0 1 1-5.2 3H4l3.5-4 3.5 4H8.8A4 4 0 1 0 12 8V6z"/></svg>
+                        Restart
+                    </button>
                 </div>
             </div>
             <form id="ports-form">

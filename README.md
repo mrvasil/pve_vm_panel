@@ -25,6 +25,7 @@ export PVE_DEFAULT_BRIDGE="vmbr1"
 export NFT_PORT_PANEL_URL="https://nft-port-panel.local"
 export NFT_PORT_PANEL_TOKEN="your-token"
 export NFT_PORT_PANEL_HEADER="authorization"
+export NFT_PORT_PANEL_UI_URL="https://ports.example.com"
 ```
 
 Example `.env`:
@@ -40,6 +41,7 @@ PVE_DEFAULT_BRIDGE="vmbr1"
 NFT_PORT_PANEL_URL="https://nft-port-panel.local"
 NFT_PORT_PANEL_TOKEN="your-token"
 NFT_PORT_PANEL_HEADER="authorization"
+NFT_PORT_PANEL_UI_URL="https://ports.example.com"
 ```
 
 3. Run the app:
@@ -80,6 +82,7 @@ Open `http://localhost:8080`.
 - `NFT_PORT_PANEL_URL`: base URL for nft_port_panel (e.g. `https://panel.local`).
 - `NFT_PORT_PANEL_TOKEN`: API token for nft_port_panel.
 - `NFT_PORT_PANEL_HEADER`: `authorization` (default) or `x-api-token` for auth header.
+- `NFT_PORT_PANEL_UI_URL`: optional UI link for the Ports panel button.
 
 ## Notes
 

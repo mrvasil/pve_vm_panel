@@ -50,6 +50,7 @@ APP_PUBLIC_DOMAIN = os.getenv("APP_PUBLIC_DOMAIN", "").strip()
 NFT_PORT_PANEL_URL = os.getenv("NFT_PORT_PANEL_URL", "http://localhost:8080").strip()
 NFT_PORT_PANEL_TOKEN = os.getenv("NFT_PORT_PANEL_TOKEN", "").strip()
 NFT_PORT_PANEL_HEADER = os.getenv("NFT_PORT_PANEL_HEADER", "Authorization").strip().lower()
+NFT_PORT_PANEL_UI_URL = os.getenv("NFT_PORT_PANEL_UI_URL", "").strip()
 
 PRESETS = [
     {

@@ -646,6 +646,7 @@ def index():
         template_vmid=config.TEMPLATE_VMID,
         storage=config.PVE_STORAGE,
         public_domain=config.APP_PUBLIC_DOMAIN,
+        ports_panel_url=config.NFT_PORT_PANEL_UI_URL,
         include_app_js=True,
         auth_enabled=_auth_enabled(),
     )

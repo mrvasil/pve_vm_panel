@@ -312,7 +312,6 @@ const portsName = document.getElementById("ports-name");
 const portsIp = document.getElementById("ports-ip");
 const portsList = document.getElementById("ports-list");
 const portsError = document.getElementById("ports-error");
-const portsRefresh = document.getElementById("ports-refresh");
 const portsCount = document.getElementById("ports-count");
 const portsRestart = document.getElementById("ports-restart");
 
@@ -321,6 +320,8 @@ let networkOptions = [];
 let netMap = {};
 let managePollTimer = null;
 const MANAGE_POLL_INTERVAL = 5000;
+let portsPollTimer = null;
+const PORTS_POLL_INTERVAL = 6000;
 
 function setTab(tabName) {
     if (!tabCreate || !tabManage || !tabPorts) return;
@@ -459,11 +460,17 @@ function selectVm(vmid) {
 function updateVmPorts(details) {
     if (!vmPortsCurrent || !vmPortsBlock) return;
     vmPortsBlock.hidden = true;
-    if (!details.ip || !details.name) return;
+    if (!details.ip && !details.name) return;
     vmPortsCurrent.textContent = "Loading...";
     fetchPortsAllocations()
         .then((allocations) => {
-            const match = allocations.find((alloc) => alloc.name === details.name && alloc.ip === details.ip);
+            let match = null;
+            if (details.name) {
+                match = allocations.find((alloc) => alloc.name === details.name);
+            }
+            if (!match && details.ip) {
+                match = allocations.find((alloc) => alloc.ip === details.ip);
+            }
             if (!match) return;
             const range =
                 match.range_start && match.range_end ? `${match.range_start}-${match.range_end}` : "-";
@@ -616,6 +623,15 @@ function stopManagePolling() {
 
 startManagePolling();
 
+function startPortsPolling() {
+    if (portsPollTimer) return;
+    portsPollTimer = setInterval(() => {
+        loadPorts();
+    }, PORTS_POLL_INTERVAL);
+}
+
+startPortsPolling();
+
 function setPortsMessage(message, isError) {
     if (!portsError) return;
     portsError.textContent = message || "";
@@ -722,10 +738,6 @@ function deletePort(name, ip) {
         .catch((err) => {
             setPortsMessage(err.message, true);
         });
-}
-
-if (portsRefresh) {
-    portsRefresh.addEventListener("click", () => loadPorts());
 }
 
 if (portsRestart) {
