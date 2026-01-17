@@ -494,6 +494,19 @@ select:focus {
     margin-top: 12px;
     display: flex;
     justify-content: flex-end;
+    gap: 8px;
+}
+
+.result-telegram {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px dashed var(--border);
+    background: #0c1117;
+    color: var(--ink);
+    font-size: 12px;
+    font-family: "IBM Plex Mono", monospace;
+    resize: vertical;
 }
 
 .error-box {

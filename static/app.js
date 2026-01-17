@@ -4,6 +4,7 @@ const statusPill = document.getElementById("status-pill");
 const stepsEl = document.getElementById("steps");
 const errorBox = document.getElementById("error-box");
 const copyBtn = document.getElementById("copy-password");
+const copyTelegramBtn = document.getElementById("copy-telegram");
 const genBtn = document.getElementById("gen-pass");
 const passInput = document.getElementById("password");
 
@@ -12,10 +13,15 @@ const resultVmid = document.getElementById("result-vmid");
 const resultIp = document.getElementById("result-ip");
 const resultUser = document.getElementById("result-user");
 const resultPass = document.getElementById("result-pass");
+const resultSshPort = document.getElementById("result-ssh-port");
+const resultPortRange = document.getElementById("result-port-range");
+const portsEnabled = document.getElementById("vm-ports-enabled");
+const resultTelegram = document.getElementById("result-telegram");
 
 let currentJobId = null;
 let pollTimer = null;
 let lastPassword = "";
+let resultData = {};
 
 const DEFAULT_STEPS = [
     { key: "clone", label: "Clone template", status: "pending", message: "" },
@@ -23,6 +29,7 @@ const DEFAULT_STEPS = [
     { key: "hardware", label: "Resize hardware", status: "pending", message: "" },
     { key: "start", label: "Start VM", status: "pending", message: "" },
     { key: "ip", label: "Detect IP", status: "pending", message: "" },
+    { key: "ports", label: "Allocate ports", status: "pending", message: "" },
 ];
 
 function setStatus(state, text) {
@@ -71,12 +78,58 @@ function resetResults() {
     resultIp.textContent = "-";
     resultUser.textContent = "-";
     resultPass.textContent = "-";
+    resultSshPort.textContent = "-";
+    resultPortRange.textContent = "-";
+    if (resultTelegram) resultTelegram.value = "";
     copyBtn.disabled = true;
+    if (copyTelegramBtn) copyTelegramBtn.disabled = true;
     lastPassword = "";
+    resultData = {};
+}
+
+function buildTelegramMessage(data) {
+    const domain = (window.PUBLIC_DOMAIN || data.ip || "").trim() || "-";
+    const username = data.username || "-";
+    const password = data.password || "-";
+    const sshPort = data.ssh_port || "-";
+    let portLine = "**раскрытые порты**: -";
+    if (data.port_range) {
+        const [start, end] = data.port_range.split("-");
+        if (start && end) {
+            portLine = `**раскрытые порты** от ${start} до ${end}`;
+        } else {
+            portLine = `**раскрытые порты**: \`${data.port_range}\``;
+        }
+    }
+    const passLine = password === "-" ? "-" : `||${password}||`;
+    const sshCmd =
+        username !== "-" && domain !== "-" && sshPort !== "-"
+            ? `ssh ${username}@${domain} -p ${sshPort}`
+            : "-";
+    return [
+        `**domain**: \`${domain}\``,
+        `**username**: \`${username}\``,
+        `**pass**: ${passLine}`,
+        `**ssh port**: ${sshPort}`,
+        portLine,
+        "",
+        `\`${sshCmd}\``,
+    ].join("\n");
+}
+
+function updateTelegramMessage() {
+    if (!resultTelegram) return;
+    const message = buildTelegramMessage(resultData);
+    resultTelegram.value = message;
+    if (copyTelegramBtn) {
+        const ready = resultData.username || resultData.password || resultData.ssh_port;
+        copyTelegramBtn.disabled = !ready;
+    }
 }
 
 function updateResults(result) {
     if (!result) return;
+    resultData = { ...resultData, ...result };
     if (result.name) resultName.textContent = result.name;
     if (result.vmid) resultVmid.textContent = result.vmid;
     if (result.ip) resultIp.textContent = result.ip;
@@ -86,6 +139,9 @@ function updateResults(result) {
         lastPassword = result.password;
         copyBtn.disabled = false;
     }
+    if (result.ssh_port) resultSshPort.textContent = result.ssh_port;
+    if (result.port_range) resultPortRange.textContent = result.port_range;
+    updateTelegramMessage();
 }
 
 function generatePassword(length = 16) {
@@ -156,6 +212,7 @@ form.addEventListener("submit", (event) => {
         username: formData.get("username"),
         password: formData.get("password"),
         preset: formData.get("preset"),
+        ports_enabled: !!portsEnabled?.checked,
     };
 
     setError("");
@@ -205,6 +262,21 @@ copyBtn.addEventListener("click", async () => {
         setError("Clipboard blocked in this browser");
     }
 });
+
+if (copyTelegramBtn) {
+    copyTelegramBtn.addEventListener("click", async () => {
+        if (!resultTelegram || !resultTelegram.value) return;
+        try {
+            await navigator.clipboard.writeText(resultTelegram.value);
+            copyTelegramBtn.textContent = "Copied";
+            setTimeout(() => {
+                copyTelegramBtn.textContent = "Copy Telegram";
+            }, 1500);
+        } catch (err) {
+            setError("Clipboard blocked in this browser");
+        }
+    });
+}
 
 renderSteps(DEFAULT_STEPS);
 

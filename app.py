@@ -27,6 +27,7 @@ STEP_ORDER = [
     {"key": "hardware", "label": "Resize hardware"},
     {"key": "start", "label": "Start VM"},
     {"key": "ip", "label": "Detect IP"},
+    {"key": "ports", "label": "Allocate ports"},
 ]
 
 NAME_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{2,30}$")
@@ -523,7 +524,7 @@ def _regenerate_cloudinit(proxmox, node, vmid):
         raise
 
 
-def _provision_vm(job_id, vm_name, username, password, preset):
+def _provision_vm(job_id, vm_name, username, password, preset, ports_enabled):
     _update_job(job_id, status="running")
     proxmox = _get_proxmox()
     node = config.PVE_NODE
@@ -584,6 +585,45 @@ def _provision_vm(job_id, vm_name, username, password, preset):
         else:
             _update_step(job_id, current_step, "skipped", "IP check disabled")
 
+        current_step = "ports"
+        if ports_enabled:
+            if ip_address:
+                _update_step(job_id, current_step, "running", "Allocating ports")
+                response, data, status_code = _nft_request(
+                    "POST",
+                    "/api/vm-ports",
+                    {"vm_name": clone_name, "vm_ip": ip_address},
+                )
+                if response is None:
+                    _update_step(job_id, current_step, "warn", data.get("error", "Port allocation failed"))
+                elif data.get("ok"):
+                    range_start = data.get("range_start")
+                    range_end = data.get("range_end")
+                    port_range = None
+                    if range_start and range_end:
+                        port_range = f"{range_start}-{range_end}"
+                    _set_result(
+                        job_id,
+                        ssh_port=data.get("ssh_port"),
+                        port_range=port_range,
+                    )
+                    restart_response, restart_data, restart_status = _nft_request("POST", "/api/restart")
+                    if restart_response is None:
+                        message = restart_data.get("error", "Ports allocated, restart failed")
+                        _update_step(job_id, current_step, "warn", message)
+                    elif restart_data.get("ok"):
+                        _update_step(job_id, current_step, "done", "Ports allocated + nftables restarted")
+                    else:
+                        message = restart_data.get("error") or f"Restart failed ({restart_status})"
+                        _update_step(job_id, current_step, "warn", message)
+                else:
+                    message = data.get("error") or f"Port allocation failed ({status_code})"
+                    _update_step(job_id, current_step, "warn", message)
+            else:
+                _update_step(job_id, current_step, "skipped", "IP missing")
+        else:
+            _update_step(job_id, current_step, "skipped", "Ports disabled")
+
         _set_result(
             job_id,
             username=username,
@@ -605,6 +645,7 @@ def index():
         default_username=config.DEFAULT_USERNAME,
         template_vmid=config.TEMPLATE_VMID,
         storage=config.PVE_STORAGE,
+        public_domain=config.APP_PUBLIC_DOMAIN,
         include_app_js=True,
         auth_enabled=_auth_enabled(),
     )
@@ -798,6 +839,7 @@ def create_vm():
     preset_id = (payload.get("preset") or "").strip()
     username = (payload.get("username") or "").strip() or config.DEFAULT_USERNAME
     password = (payload.get("password") or "").strip()
+    ports_enabled = bool(payload.get("ports_enabled", True))
 
     if not NAME_PATTERN.match(name):
         return jsonify({"error": "Invalid VM name"}), 400
@@ -819,7 +861,7 @@ def create_vm():
 
     thread = threading.Thread(
         target=_provision_vm,
-        args=(job["id"], name, username, password, preset),
+        args=(job["id"], name, username, password, preset, ports_enabled),
         daemon=True,
     )
     thread.start()

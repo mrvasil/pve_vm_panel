@@ -74,6 +74,13 @@
                 </div>
             </div>
 
+            <div class="field">
+                <label class="inline" for="vm-ports-enabled">
+                    <input id="vm-ports-enabled" name="ports_enabled" type="checkbox" checked>
+                    <span>Add public ports</span>
+                </label>
+            </div>
+
             <button class="primary" type="submit" id="submit-btn">Create VM</button>
         </form>
     </div>
@@ -106,10 +113,24 @@
                 <span class="result-label">Password</span>
                 <span class="result-value mono" id="result-pass">-</span>
             </div>
+            <div class="result-row">
+                <span class="result-label">SSH port</span>
+                <span class="result-value mono" id="result-ssh-port">-</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">Port range</span>
+                <span class="result-value mono" id="result-port-range">-</span>
+            </div>
         </div>
 
         <div class="result-actions">
             <button class="ghost" type="button" id="copy-password" disabled>Copy password</button>
+            <button class="ghost" type="button" id="copy-telegram" disabled>Copy markdown</button>
+        </div>
+
+        <div class="field">
+            <label for="result-telegram">Markdown message</label>
+            <textarea id="result-telegram" class="result-telegram" rows="7" readonly></textarea>
         </div>
 
         <div class="error-box" id="error-box"></div>
@@ -230,4 +251,7 @@
         </div>
     </div>
 </section>
+<script>
+    window.PUBLIC_DOMAIN = "{{ public_domain }}";
+</script>
 {% endblock %}

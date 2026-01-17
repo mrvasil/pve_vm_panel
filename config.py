@@ -45,6 +45,7 @@ APP_PORT = _env_int("APP_PORT", 3333)
 APP_DEBUG = _env_bool("APP_DEBUG", "false")
 APP_PASSWORD = os.getenv("APP_PASSWORD", "")
 APP_SECRET_KEY = os.getenv("APP_SECRET_KEY", "dev-secret")
+APP_PUBLIC_DOMAIN = os.getenv("APP_PUBLIC_DOMAIN", "").strip()
 
 NFT_PORT_PANEL_URL = os.getenv("NFT_PORT_PANEL_URL", "http://localhost:8080").strip()
 NFT_PORT_PANEL_TOKEN = os.getenv("NFT_PORT_PANEL_TOKEN", "").strip()
