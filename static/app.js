@@ -319,6 +319,8 @@ const portsRestart = document.getElementById("ports-restart");
 let selectedVmid = null;
 let networkOptions = [];
 let netMap = {};
+let managePollTimer = null;
+const MANAGE_POLL_INTERVAL = 5000;
 
 function setTab(tabName) {
     if (!tabCreate || !tabManage || !tabPorts) return;
@@ -424,14 +426,15 @@ function renderVmList(vms) {
 
 function loadVmList() {
     if (!vmListEl) return;
-    vmListEl.innerHTML = "<div class=\"vm-empty\">Loading...</div>";
     fetch("/api/vms")
         .then((response) => response.json())
         .then((data) => {
             renderVmList(data.vms || []);
         })
         .catch((err) => {
-            vmListEl.innerHTML = `<div class="vm-empty">Failed to load: ${err.message}</div>`;
+            if (!vmListEl.children.length) {
+                vmListEl.innerHTML = `<div class="vm-empty">Failed to load: ${err.message}</div>`;
+            }
         });
 }
 
@@ -453,7 +456,25 @@ function selectVm(vmid) {
     loadVmDetails(vmid);
 }
 
-function loadVmDetails(vmid) {
+function updateVmPorts(details) {
+    if (!vmPortsCurrent || !vmPortsBlock) return;
+    vmPortsBlock.hidden = true;
+    if (!details.ip || !details.name) return;
+    vmPortsCurrent.textContent = "Loading...";
+    fetchPortsAllocations()
+        .then((allocations) => {
+            const match = allocations.find((alloc) => alloc.name === details.name && alloc.ip === details.ip);
+            if (!match) return;
+            const range =
+                match.range_start && match.range_end ? `${match.range_start}-${match.range_end}` : "-";
+            vmPortsCurrent.textContent = `SSH ${match.ssh_port || "-"}, range ${range}`;
+            vmPortsBlock.hidden = false;
+        })
+        .catch(() => {});
+}
+
+function loadVmDetails(vmid, options = {}) {
+    const { updateFields = true } = options;
     if (!vmDetailsEl || !vmEmptyEl) return;
     setVmMessage("", false);
     vmEmptyEl.hidden = true;
@@ -462,43 +483,26 @@ function loadVmDetails(vmid) {
         .then((response) => response.json())
         .then((details) => {
             updateMeta(details);
-            vmUsername.value = details.ciuser || "";
-            vmPassword.value = "";
-            vmCores.value = details.cores || "";
-            vmRam.value = details.memory ? (details.memory / 1024).toFixed(1).replace(/\\.0$/, "") : "";
-            vmDiskAdd.value = "";
-            vmDiskCurrent.textContent = details.disk_size_mb
-                ? `Current: ${(details.disk_size_mb / 1024).toFixed(1).replace(/\\.0$/, "")} GB`
-                : "Current: -";
-            netMap = details.networks || {};
-            const ifaceKeys = Object.keys(netMap);
-            const defaultIface = ifaceKeys.includes("net0") ? "net0" : ifaceKeys[0];
-            const currentBridge = defaultIface ? netMap[defaultIface]?.bridge : null;
-            vmNetCurrent.textContent = defaultIface
-                ? `Current: ${defaultIface.toUpperCase()} → ${currentBridge || "unknown"}`
-                : "Current: -";
-            loadNetworks().finally(() => {
-                renderNetworkSelects(defaultIface, currentBridge);
-            });
-            if (vmPortsCurrent && vmPortsBlock) {
-                vmPortsBlock.hidden = true;
-                if (details.ip && details.name) {
-                    vmPortsCurrent.textContent = "Loading...";
-                    fetchPortsAllocations()
-                        .then((allocations) => {
-                            const match = allocations.find(
-                                (alloc) => alloc.name === details.name && alloc.ip === details.ip
-                            );
-                            if (!match) return;
-                            const range =
-                                match.range_start && match.range_end
-                                    ? `${match.range_start}-${match.range_end}`
-                                    : "-";
-                            vmPortsCurrent.textContent = `SSH ${match.ssh_port || "-"}, range ${range}`;
-                            vmPortsBlock.hidden = false;
-                        })
-                        .catch(() => {});
-                }
+            if (updateFields) {
+                updateVmPorts(details);
+                vmUsername.value = details.ciuser || "";
+                vmPassword.value = "";
+                vmCores.value = details.cores || "";
+                vmRam.value = details.memory ? (details.memory / 1024).toFixed(1).replace(/\\.0$/, "") : "";
+                vmDiskAdd.value = "";
+                vmDiskCurrent.textContent = details.disk_size_mb
+                    ? `Current: ${(details.disk_size_mb / 1024).toFixed(1).replace(/\\.0$/, "")} GB`
+                    : "Current: -";
+                netMap = details.networks || {};
+                const ifaceKeys = Object.keys(netMap);
+                const defaultIface = ifaceKeys.includes("net0") ? "net0" : ifaceKeys[0];
+                const currentBridge = defaultIface ? netMap[defaultIface]?.bridge : null;
+                vmNetCurrent.textContent = defaultIface
+                    ? `Current: ${defaultIface.toUpperCase()} → ${currentBridge || "unknown"}`
+                    : "Current: -";
+                loadNetworks().finally(() => {
+                    renderNetworkSelects(defaultIface, currentBridge);
+                });
             }
             renderVmListFromSelection();
         })
@@ -593,6 +597,24 @@ function powerAction(action) {
 if (vmStartBtn) vmStartBtn.addEventListener("click", () => powerAction("start"));
 if (vmRebootBtn) vmRebootBtn.addEventListener("click", () => powerAction("reboot"));
 if (vmStopBtn) vmStopBtn.addEventListener("click", () => powerAction("stop"));
+
+function startManagePolling() {
+    if (managePollTimer) return;
+    managePollTimer = setInterval(() => {
+        loadVmList();
+        if (selectedVmid) {
+            loadVmDetails(selectedVmid, { updateFields: false });
+        }
+    }, MANAGE_POLL_INTERVAL);
+}
+
+function stopManagePolling() {
+    if (!managePollTimer) return;
+    clearInterval(managePollTimer);
+    managePollTimer = null;
+}
+
+startManagePolling();
 
 function setPortsMessage(message, isError) {
     if (!portsError) return;
