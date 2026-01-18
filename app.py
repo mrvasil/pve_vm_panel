@@ -409,6 +409,42 @@ def _wait_for_task(proxmox, node, upid, timeout=1800):
         time.sleep(config.POLL_INTERVAL)
 
 
+def _wait_for_vm_status(proxmox, node, vmid, desired, timeout=180):
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        status_data = _unwrap_data(proxmox.nodes(node).qemu(vmid).status.current.get()) or {}
+        if status_data.get("status") == desired:
+            return True
+        time.sleep(config.POLL_INTERVAL)
+    return False
+
+
+def _run_power_task(proxmox, node, vmid, action):
+    result = getattr(proxmox.nodes(node).qemu(vmid).status, action).post()
+    upid = _unwrap_data(result)
+    if isinstance(upid, str) and upid.startswith("UPID"):
+        _wait_for_task(proxmox, node, upid)
+
+
+def _restart_vm_sequence(vmid):
+    try:
+        proxmox = _get_proxmox()
+        node = config.PVE_NODE
+        status_data = _unwrap_data(proxmox.nodes(node).qemu(vmid).status.current.get()) or {}
+        status = status_data.get("status")
+        if status != "stopped":
+            _run_power_task(proxmox, node, vmid, "stop")
+            _wait_for_vm_status(proxmox, node, vmid, "stopped")
+        _run_power_task(proxmox, node, vmid, "start")
+    except Exception:
+        app.logger.exception("Failed to restart VM %s", vmid)
+
+
+def _queue_restart(vmid):
+    thread = threading.Thread(target=_restart_vm_sequence, args=(vmid,), daemon=True)
+    thread.start()
+
+
 def _read_vm_ip(proxmox, node, vmid):
     try:
         data = proxmox.nodes(node).qemu(vmid).agent("network-get-interfaces").get()
@@ -779,7 +815,11 @@ def update_vm(vmid):
         delta_mb = int(float(disk_add_gb) * 1024)
         resize_note = _resize_disk_by_mb(proxmox, node, vmid, config.PVE_DISK_NAME, delta_mb)
 
-    return jsonify({"success": True, "resize": resize_note})
+    restart_requested = bool(payload.get("restart"))
+    if restart_requested:
+        _queue_restart(vmid)
+
+    return jsonify({"success": True, "resize": resize_note, "restart": restart_requested})
 
 
 @app.route("/api/vms/<int:vmid>/power", methods=["POST"])

@@ -296,6 +296,7 @@ const vmPortsCurrent = document.getElementById("vm-ports-current");
 const vmPortsBlock = document.getElementById("vm-ports-block");
 const vmUpdateForm = document.getElementById("vm-update-form");
 const vmUpdateError = document.getElementById("vm-update-error");
+const vmSaveRestart = document.getElementById("vm-save-restart");
 const vmUsername = document.getElementById("vm-username");
 const vmPassword = document.getElementById("vm-password");
 const vmCores = document.getElementById("vm-cores");
@@ -553,9 +554,10 @@ if (vmGenPass) {
     });
 }
 
-function submitVmUpdate(event) {
-    event.preventDefault();
+function submitVmUpdate(event, options = {}) {
+    if (event) event.preventDefault();
     if (!selectedVmid) return;
+    const restartRequested = options.restart === true;
     const payload = {};
     if (vmUsername.value) payload.ciuser = vmUsername.value.trim();
     if (vmPassword.value) payload.cipassword = vmPassword.value;
@@ -566,6 +568,7 @@ function submitVmUpdate(event) {
         payload.net_iface = vmNetIface.value;
         payload.net_bridge = vmNetBridge.value;
     }
+    if (restartRequested) payload.restart = true;
     setVmMessage("", false);
     fetch(`/api/vms/${selectedVmid}/update`, {
         method: "POST",
@@ -577,7 +580,8 @@ function submitVmUpdate(event) {
             if (!ok || data.error) {
                 throw new Error(data.error || "Update failed");
             }
-            setVmMessage("Changes applied.", false);
+            const note = restartRequested ? "Changes applied. Restart queued." : "Changes applied.";
+            setVmMessage(note, false);
             loadVmDetails(selectedVmid);
         })
         .catch((err) => {
@@ -587,6 +591,10 @@ function submitVmUpdate(event) {
 
 if (vmUpdateForm) {
     vmUpdateForm.addEventListener("submit", submitVmUpdate);
+}
+
+if (vmSaveRestart) {
+    vmSaveRestart.addEventListener("click", () => submitVmUpdate(null, { restart: true }));
 }
 
 function powerAction(action) {
